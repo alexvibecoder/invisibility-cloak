@@ -2,6 +2,12 @@
 
 An interactive browser-based prototype demonstrating a real-time "invisibility cloak" effect using your webcam.
 
+## Preview
+
+<p align="center">
+  <img src="Preview.png" alt="Magic / invisibility cloak demo preview" width="720" />
+</p>
+
 ## How It Works
 
 The demo uses your device camera and computer vision techniques to:
