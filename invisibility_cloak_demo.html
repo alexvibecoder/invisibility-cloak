@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Invisibility Cloak Prototype Demo</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            flex: 1 0 auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .status {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .controls button {
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background: #4f46e5;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .controls button:hover {
+            background: #4338ca;
+        }
+        .controls button:disabled {
+            background: #6b7280;
+            cursor: not-allowed;
+        }
+        .material-symbols-outlined {
+            font-variation-settings:
+                'FILL' 0,
+                'wght' 400,
+                'GRAD' 0,
+                'opsz' 24;
+            font-size: 18px;
+            line-height: 1;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            aspect-ratio: 3 / 2;
+        }
+        video {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            border: 2px solid #3b82f6;
+        }
+        .success {
+            background: #059669;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .error {
+            background: #dc2626;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .log {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .sliders {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .slider-group {
+            background: #334155;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .slider-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        input[type="range"] {
+            width: 100%;
+            margin: 5px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px 0;
+            background: #0f172a;
+            font-size: 12px;
+            color: #e2e8f0;
+            margin-top: auto;
+        }
+        .footer a,
+        .footer a:visited,
+        .footer a:hover,
+        .footer a:active,
+        .footer a:focus {
+            color: #e2e8f0;
+        }
+        .pipette-cursor {
+            cursor: url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20width%3D%2232%22%20height%3D%2232%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22white%22%20stroke%3D%22black%22%20stroke-width%3D%221%22%3E%3Cpath%20d%3D%22M3%2021l6-6%203%203-6%206H3v-3z%22/%3E%3Cpath%20d%3D%22M14%203l7%207-5%205-7-7%205-5z%22/%3E%3Cpath%20d%3D%22M10%207l7%207%22/%3E%3C/svg%3E') 2 22, crosshair;
+        }
+        .empty-state {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: left;
+            padding: 20px;
+            color: #A0A2A7;
+            pointer-events: none;
+        }
+        .empty-state .empty-content { text-align: left; }
+        .empty-state .empty-content p {
+            margin: 8px 0;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center;">✨ Invisibility Cloak Prototype Demo</h1>
+        
+        <div class="controls">
+            <button id="cameraToggleBtn" onclick="toggleCamera()">
+                <span id="cameraToggleIcon" class="material-symbols-outlined">camera_alt</span>
+                <span id="cameraToggleLabel">Start Camera</span>
+            </button>
+            <button onclick="pickColor()" id="pickColorBtn" disabled>
+                <span id="pickColorIcon" class="material-symbols-outlined">colorize</span>
+                <span id="pickColorLabel">Pick Cloth Color</span>
+            </button>
+            <button id="captureBtn" onclick="captureBackground()" disabled>
+                <span id="captureIcon" class="material-symbols-outlined">wallpaper</span>
+                <span>Capture Background</span>
+            </button>
+            <button id="resetBtn" onclick="resetSettings()" disabled>
+                <span id="resetIcon" class="material-symbols-outlined">restart_alt</span>
+                <span>Reset</span>
+            </button>
+        </div>
+
+        <div class="video-container">
+            <video id="video" autoplay muted playsinline style="display: none;"></video>
+            <canvas id="canvas"></canvas>
+            <div id="emptyState" class="empty-state">
+                <div class="empty-content">
+                    <p>1️⃣ Start your camera</p>
+                    <p>2️⃣ Pick the colour of the cloth</p>
+                    <p>3️⃣ Move away and capture the background</p>
+                    <p>✨ Enjoy the magic</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="sliders">
+            <div class="slider-group">
+                <label>Hue: <span id="hueValue">89</span></label>
+                <input type="range" id="hueSlider" min="0" max="179" value="89" oninput="updateHue(this.value)">
+                <label>Hue Tolerance: <span id="hueTolValue">8</span></label>
+                <input type="range" id="hueTolSlider" min="1" max="40" value="8" oninput="updateHueTol(this.value)">
+            </div>
+            <div class="slider-group">
+                <label>Saturation Min: <span id="sMinValue">60</span></label>
+                <input type="range" id="sMinSlider" min="0" max="255" value="60" oninput="updateSMin(this.value)">
+                <label>Value Min: <span id="vMinValue">100</span></label>
+                <input type="range" id="vMinSlider" min="0" max="255" value="100" oninput="updateVMin(this.value)">
+            </div>
+        </div>
+
+        <div class="log" id="log" style="display: none;"></div>
+        <footer class="footer">Prototyped by <a href="https://www.linkedin.com/in/alexsviryda/" target="_blank" rel="noopener noreferrer">Alex Sviryda</a> using ChatGPT-5 and Cursor. 2025</footer>
+    </div>
+
+    <script>
+        // Global variables
+        let video = null;
+        let canvas = null;
+        let ctx = null;
+        let stream = null;
+        let isRunning = false;
+        let frameCount = 0;
+        let background = null;
+        let hasBackground = false;
+        let imageData = null;
+        let isMirrored = true;
+        let hasPickedColor = false;
+        // Background color matching state
+        let backgroundAverageRGB = { r: 128, g: 128, b: 128 };
+        let whiteBalanceGains = { r: 1, g: 1, b: 1 };
+        const whiteBalanceSmoothingAlpha = 0.15; // 0..1
+        
+        // HSV parameters
+        let targetHSV = { h: 89, s: 53, v: 160 };
+        let hTol = 8;
+        let sMin = 60;
+        let vMin = 100;
+        
+        // Logging function
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            const div = document.createElement('div');
+            div.innerHTML = `[${timestamp}] ${message}`;
+            if (className) div.className = className;
+            logDiv.appendChild(div);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        // Test canvas operations
+        function testCanvas() {
+            log('Testing canvas operations...');
+            
+            if (canvas) {
+                ctx = canvas.getContext('2d');
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw a simple shape
+                ctx.fillStyle = 'red';
+                ctx.fillRect(100, 100, 200, 200);
+                
+                // Draw text
+                ctx.fillStyle = 'white';
+                ctx.font = '24px Arial';
+                ctx.fillText('Canvas Test Working!', 150, 250);
+                
+                log('✅ Canvas operations successful');
+            } else {
+                log('❌ Canvas not available');
+            }
+        }
+
+        // Generate a cursor data URL using a Material Symbols ligature
+        function generateMaterialIconCursor(ligatureText) {
+            try {
+                const size = 32;
+                const c = document.createElement('canvas');
+                c.width = size;
+                c.height = size;
+                const cctx = c.getContext('2d');
+                cctx.clearRect(0, 0, size, size);
+                cctx.fillStyle = '#e2e8f0';
+                cctx.textAlign = 'center';
+                cctx.textBaseline = 'middle';
+                cctx.font = '28px "Material Symbols Outlined"';
+                // Draw the ligature; the font renders it as an icon
+                cctx.fillText(ligatureText, size / 2, size / 2 + 1);
+                return c.toDataURL('image/png');
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function setPickCursor(active) {
+            if (!canvas) return;
+            if (active) {
+                const url = generateMaterialIconCursor('colorize');
+                if (url) {
+                    canvas.style.cursor = `url(${url}) 6 24, crosshair`;
+                } else {
+                    canvas.style.cursor = 'crosshair';
+                }
+            } else {
+                canvas.style.cursor = '';
+            }
+        }
+
+        // Toggle camera on/off
+        function toggleCamera() {
+            if (isRunning) {
+                stopCamera();
+            } else {
+                startCamera();
+            }
+        }
+
+        // Start camera
+        async function startCamera() {
+            try {
+                log('Starting camera...');
+                
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 1200, height: 800 },
+                    audio: false
+                });
+
+                video = document.getElementById('video');
+
+                video.srcObject = stream;
+                
+                // Wait for video to be ready
+                await new Promise((resolve) => {
+                    video.onloadedmetadata = resolve;
+                });
+
+                await video.play();
+                
+                // Size canvas to video
+                canvas.width = video.videoWidth || 1200;
+                canvas.height = video.videoHeight || 800;
+                
+                log(`Canvas sized to: ${canvas.width}x${canvas.height}`);
+                log(`Video dimensions: ${video.videoWidth}x${video.videoHeight}`);
+                
+                // Start processing frames
+                isRunning = true;
+                processFrame();
+                
+                log('✅ Camera started successfully');
+                
+                document.getElementById('cameraToggleLabel').textContent = 'Stop Camera';
+                document.getElementById('cameraToggleIcon').textContent = 'no_photography';
+                document.getElementById('captureBtn').disabled = false;
+                document.getElementById('pickColorBtn').disabled = false;
+                document.getElementById('resetBtn').disabled = true;
+                const empty = document.getElementById('emptyState');
+                if (empty) empty.style.display = 'none';
+                
+                
+            } catch (error) {
+                log(`❌ Camera error: ${error.message}`, 'error');
+            }
+        }
+
+        // Process video frame with invisibility cloak effect
+        function processFrame() {
+            if (!isRunning || !video || !canvas || !ctx) return;
+
+            try {
+                frameCount++;
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Apply mirror effect if enabled
+                if (isMirrored) {
+                    ctx.save();
+                    ctx.scale(-1, 1);
+                    ctx.translate(-canvas.width, 0);
+                }
+                
+                // Draw video frame to canvas
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Restore context if mirrored
+                if (isMirrored) {
+                    ctx.restore();
+                }
+                
+                // Get image data for processing
+                imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+
+                // Update white balance/brightness gains based on current frame (exclude cloak color)
+                if (hasBackground && hasPickedColor) {
+                    const sampleStride = 16; // sample every Nth pixel to reduce cost
+                    let sumR = 0, sumG = 0, sumB = 0, count = 0;
+                    for (let i = 0; i < data.length; i += 4 * sampleStride) {
+                        const r = data[i];
+                        const g = data[i + 1];
+                        const b = data[i + 2];
+                        const hsv = rgbToHsv(r, g, b);
+                        if (!isHsvMatch(hsv)) {
+                            sumR += r; sumG += g; sumB += b; count++;
+                        }
+                    }
+                    if (count > 0) {
+                        const avgR = sumR / count;
+                        const avgG = sumG / count;
+                        const avgB = sumB / count;
+                        const gainRRaw = clampGain(avgR / (backgroundAverageRGB.r || 1));
+                        const gainGRaw = clampGain(avgG / (backgroundAverageRGB.g || 1));
+                        const gainBRaw = clampGain(avgB / (backgroundAverageRGB.b || 1));
+                        whiteBalanceGains.r = whiteBalanceGains.r * (1 - whiteBalanceSmoothingAlpha) + gainRRaw * whiteBalanceSmoothingAlpha;
+                        whiteBalanceGains.g = whiteBalanceGains.g * (1 - whiteBalanceSmoothingAlpha) + gainGRaw * whiteBalanceSmoothingAlpha;
+                        whiteBalanceGains.b = whiteBalanceGains.b * (1 - whiteBalanceSmoothingAlpha) + gainBRaw * whiteBalanceSmoothingAlpha;
+                    }
+                }
+                
+                // Process pixels for invisibility effect
+                if (hasBackground && background) {
+                    const bgData = background.data;
+                    
+                    for (let i = 0; i < data.length; i += 4) {
+                        const r = data[i];
+                        const g = data[i + 1];
+                        const b = data[i + 2];
+                        
+                        // Convert to HSV
+                        const hsv = rgbToHsv(r, g, b);
+                        
+                        // Check if this pixel matches our target color
+                        if (isHsvMatch(hsv)) {
+                            // Replace with background pixel adjusted to match current frame warmth/brightness
+                            data[i] = clampByte(bgData[i] * whiteBalanceGains.r);         // R
+                            data[i + 1] = clampByte(bgData[i + 1] * whiteBalanceGains.g); // G
+                            data[i + 2] = clampByte(bgData[i + 2] * whiteBalanceGains.b); // B
+                            // Keep original alpha
+                        }
+                    }
+                    
+                    // Put processed image data back to canvas
+                    ctx.putImageData(imageData, 0, 0);
+                }
+                
+                // Continue processing
+                requestAnimationFrame(processFrame);
+                
+            } catch (error) {
+                log(`Frame processing error: ${error.message}`, 'error');
+                isRunning = false;
+            }
+        }
+
+        // Stop camera
+        function stopCamera() {
+            isRunning = false;
+            
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+
+            hasBackground = false;
+            background = null;
+            
+            log('Camera stopped');
+            
+            document.getElementById('cameraToggleLabel').textContent = 'Start Camera';
+            document.getElementById('cameraToggleIcon').textContent = 'camera_alt';
+            document.getElementById('captureBtn').disabled = true;
+            document.getElementById('pickColorBtn').disabled = true;
+            document.getElementById('resetBtn').disabled = true;
+            const empty = document.getElementById('emptyState');
+            if (empty) empty.style.display = '';
+        }
+
+        // Parameter update functions
+        function updateHue(value) {
+            targetHSV.h = parseInt(value);
+            document.getElementById('hueValue').textContent = value;
+        }
+
+        function updateHueTol(value) {
+            hTol = parseInt(value);
+            document.getElementById('hueTolValue').textContent = value;
+        }
+
+        function updateSMin(value) {
+            sMin = parseInt(value);
+            document.getElementById('sMinValue').textContent = value;
+        }
+
+        function updateVMin(value) {
+            vMin = parseInt(value);
+            document.getElementById('vMinValue').textContent = value;
+        }
+
+        // Color conversion functions
+        function rgbToHsv(r, g, b) {
+            r /= 255; g /= 255; b /= 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h = 0, s = 0, v = max;
+            const d = max - min;
+            s = max === 0 ? 0 : d / max;
+            
+            if (max !== min) {
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+            
+            return { h: h * 179, s: s * 255, v: v * 255 };
+        }
+
+        // Check if HSV values match target
+        function isHsvMatch(hsv) {
+            let hDiff = Math.abs(hsv.h - targetHSV.h);
+            if (hDiff > 180) hDiff = 360 - hDiff; // Handle hue wrap-around
+            
+            return hDiff <= hTol && hsv.s >= sMin && hsv.v >= vMin;
+        }
+
+        // Capture background
+        function captureBackground() {
+            log('Attempting to capture background...');
+            
+            if (!canvas || !ctx) {
+                log('❌ Canvas or context not available');
+                return;
+            }
+            
+            if (!imageData) {
+                log('❌ No image data available - trying to get current frame');
+                try {
+                    imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    log(`Got image data: ${canvas.width}x${canvas.height}, ${imageData.data.length} pixels`);
+                } catch (error) {
+                    log(`❌ Failed to get image data: ${error.message}`);
+                    return;
+                }
+            }
+
+            try {
+                // Create a new Uint8ClampedArray and copy the data
+                const backgroundArray = new Uint8ClampedArray(imageData.data.length);
+                backgroundArray.set(imageData.data);
+                
+                // Create new ImageData from the array
+                background = new ImageData(backgroundArray, imageData.width, imageData.height);
+                
+                hasBackground = true;
+                log('✅ Background captured successfully');
+                log(`Background size: ${background.width}x${background.height}`);
+                const captureIcon = document.getElementById('captureIcon');
+                if (captureIcon) captureIcon.textContent = 'check_circle';
+                document.getElementById('captureBtn').disabled = true;
+                document.getElementById('resetBtn').disabled = false;
+
+                // Compute average RGB of background for reference (sampled)
+                try {
+                    const bg = background.data;
+                    const stride = 16;
+                    let rSum = 0, gSum = 0, bSum = 0, n = 0;
+                    for (let i = 0; i < bg.length; i += 4 * stride) {
+                        rSum += bg[i];
+                        gSum += bg[i + 1];
+                        bSum += bg[i + 2];
+                        n++;
+                    }
+                    if (n > 0) {
+                        backgroundAverageRGB = { r: rSum / n, g: gSum / n, b: bSum / n };
+                    }
+                } catch (e) {}
+            } catch (error) {
+                log(`❌ Background capture error: ${error.message}`);
+            }
+        }
+
+        // Color picker functionality
+        function pickColor() {
+            if (!canvas) return;
+            
+            // Add click event listener to canvas
+            canvas.onclick = function(event) {
+                const rect = canvas.getBoundingClientRect();
+                const x = Math.floor(((event.clientX - rect.left) / rect.width) * canvas.width);
+                const y = Math.floor(((event.clientY - rect.top) / rect.height) * canvas.height);
+                
+                // Get pixel color at clicked position
+                const imageData = ctx.getImageData(x, y, 1, 1);
+                const r = imageData.data[0];
+                const g = imageData.data[1];
+                const b = imageData.data[2];
+                
+                // Convert to HSV and update target
+                const hsv = rgbToHsv(r, g, b);
+                targetHSV = hsv;
+                
+                // Update sliders
+                document.getElementById('hueSlider').value = hsv.h;
+                document.getElementById('hueTolSlider').value = hTol;
+                document.getElementById('sMinSlider').value = hsv.s;
+                document.getElementById('vMinSlider').value = hsv.v;
+                
+                // Update display values
+                document.getElementById('hueValue').textContent = hsv.h;
+                document.getElementById('sMinValue').textContent = hsv.s;
+                document.getElementById('vMinValue').textContent = hsv.v;
+                
+                log(`✅ Color picked: RGB(${r},${g},${b}) → HSV(${hsv.h},${hsv.s},${hsv.v})`);
+                
+                // Remove click listener
+                canvas.onclick = null;
+                
+                // Update button text
+                document.getElementById('pickColorLabel').textContent = 'Pick Cloth Color';
+                const pickIcon = document.getElementById('pickColorIcon');
+                if (pickIcon) pickIcon.textContent = 'check_circle';
+                document.getElementById('pickColorBtn').disabled = true;
+                document.getElementById('resetBtn').disabled = false;
+                setPickCursor(false);
+                hasPickedColor = true;
+            };
+            
+            document.getElementById('pickColorLabel').textContent = 'Click on your cloth...';
+            log('Click on your cloth in the video to set the target color');
+            setPickCursor(true);
+        }
+
+        // Initialize
+        window.onload = function() {
+            log('Page loaded, initializing canvas...');
+            
+            // Initialize canvas immediately
+            canvas = document.getElementById('canvas');
+            ctx = canvas.getContext('2d');
+            
+            if (canvas && ctx) {
+                log('✅ Canvas initialized successfully');
+                // Initialize drawing buffer to target camera size
+                canvas.width = 1200;
+                canvas.height = 800;
+            } else {
+                log('❌ Canvas initialization failed');
+            }
+        };
+
+        // Cleanup on page unload
+        window.onbeforeunload = function() {
+            stopCamera();
+        };
+
+        // Reset settings to defaults and revert to camera-off state
+        function resetSettings() {
+            log('Resetting settings to defaults...');
+            // Ensure camera is stopped and UI reflects camera-off state
+            if (isRunning) {
+                stopCamera();
+            } else {
+                document.getElementById('cameraToggleLabel').textContent = 'Start Camera';
+                document.getElementById('cameraToggleIcon').textContent = 'camera_alt';
+                document.getElementById('captureBtn').disabled = true;
+                document.getElementById('pickColorBtn').disabled = true;
+                document.getElementById('resetBtn').disabled = true;
+            }
+
+            // Reset parameters
+            targetHSV = { h: 89, s: 53, v: 160 };
+            hTol = 8;
+            sMin = 60;
+            vMin = 100;
+
+            // Update sliders
+            document.getElementById('hueSlider').value = targetHSV.h;
+            document.getElementById('hueTolSlider').value = hTol;
+            document.getElementById('sMinSlider').value = sMin;
+            document.getElementById('vMinSlider').value = vMin;
+
+            // Update displayed values
+            document.getElementById('hueValue').textContent = targetHSV.h;
+            document.getElementById('hueTolValue').textContent = hTol;
+            document.getElementById('sMinValue').textContent = sMin;
+            document.getElementById('vMinValue').textContent = vMin;
+
+            // Clear background capture and color matching
+            hasBackground = false;
+            background = null;
+            hasPickedColor = false;
+            backgroundAverageRGB = { r: 128, g: 128, b: 128 };
+            whiteBalanceGains = { r: 1, g: 1, b: 1 };
+
+            // Restore button states and icons
+            const pickIcon = document.getElementById('pickColorIcon');
+            if (pickIcon) pickIcon.textContent = 'colorize';
+            const captureIcon = document.getElementById('captureIcon');
+            if (captureIcon) captureIcon.textContent = 'wallpaper';
+
+            document.getElementById('pickColorLabel').textContent = 'Pick Cloth Color';
+            document.getElementById('pickColorBtn').disabled = true;
+            document.getElementById('captureBtn').disabled = true;
+            document.getElementById('resetBtn').disabled = true;
+
+            // Remove any pending pick-click handler and cursor
+            canvas.onclick = null;
+            setPickCursor(false);
+
+            // Clear the canvas to avoid showing a stale frame
+            if (ctx && canvas) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+
+            log('✅ Settings reset');
+            const empty = document.getElementById('emptyState');
+            if (empty) empty.style.display = '';
+        }
+
+        function clampByte(x) {
+            x = Math.round(x);
+            if (x < 0) return 0;
+            if (x > 255) return 255;
+            return x;
+        }
+
+        function clampGain(g) {
+            if (!isFinite(g) || g <= 0) return 1;
+            const minG = 0.6, maxG = 1.6;
+            if (g < minG) return minG;
+            if (g > maxG) return maxG;
+            return g;
+        }
+    </script>
+</body>
+</html> 
